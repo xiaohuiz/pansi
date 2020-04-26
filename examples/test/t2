@@ -1,0 +1,4 @@
+echo this is t2
+./t1
+sleep 1
+echo t2 stopped

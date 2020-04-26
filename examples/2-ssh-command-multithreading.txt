@@ -1,0 +1,154 @@
+# -c to specify command to run
+# by default pansi will  use up to 4 worker thread. this can be changed by -W.
+# if less parallel needed, pansi will use less thread automatically.
+# in below examples, pansi will use 3 workers automatically.  
+# when running in parallel, the output sequence will not be guaranteed but pansi 
+# is made to make sure all the output from one server is not mixed with others.
+
+openvol@mtp:~/pansi/examples$  pansi -u root -p $mypwd -r c1,c2,n1 -c "date;hostname;uname -r"
+# HOST : [c2]
+Sat Apr 25 10:53:48 EDT 2020
+c2
+2.6.32-042stab140.1
+
+# HOST : [c1]
+Sat Apr 25 10:53:48 EDT 2020
+c1.leonawang.com
+2.6.32-042stab140.1
+
+# HOST : [n1]
+Sat Apr 25 14:53:48 UTC 2020
+n1
+2.6.32-042stab140.1
+
+openvol@mtp:~/pansi/examples$  pansi -Xv -u root -p $mypwd -r c1,c2,n1 -c "date;hostname;uname -r"
+# using 3 worker thread(s).
+# worker 0 started working for c1:22
+# [c1:22] command =  date;hostname;uname -r
+# worker 1 started working for c2:22
+# [c2:22] command =  date;hostname;uname -r
+# worker 2 started working for n1:22
+# [c2] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [c2] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@c2 "date;hostname;uname -r"
+# [c1] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [n1:22] command =  date;hostname;uname -r
+# [c1] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@c1 "date;hostname;uname -r"
+# [n1] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [n1] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@n1 "date;hostname;uname -r"
+# [c2] answer yes for continue connecting
+# [n1] answer yes for continue connecting
+# [c1] answer yes for continue connecting
+# [c2] Requesting password
+# [n1] Requesting password
+# [c1] Requesting password
+# [c2] EOF detected
+# worker 1 exited.
+# HOST : [c2]
+# [c2:22] command = date;hostname;uname -r
+Sat Apr 25 10:54:03 EDT 2020
+c2
+2.6.32-042stab140.1
+
+# [n1] EOF detected
+# [c1] EOF detected
+# worker 2 exited.
+# HOST : [n1]
+# [n1:22] command = date;hostname;uname -r
+Sat Apr 25 14:54:03 UTC 2020
+n1
+2.6.32-042stab140.1
+
+# worker 0 exited.
+# HOST : [c1]
+# [c1:22] command = date;hostname;uname -r
+Sat Apr 25 10:54:03 EDT 2020
+c1.leonawang.com
+2.6.32-042stab140.1
+
+openvol@mtp:~/pansi/examples$ 
+openvol@mtp:~/pansi/examples$ 
+openvol@mtp:~/pansi/examples$ time pansi -Xv -u root -p $mypwd -r c1,c2,n1 -c "hostname; sleep 5"
+# using 3 worker thread(s).
+# worker 0 started working for c1:22
+# [c1:22] command =  hostname; sleep 5
+# [c1] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [c1] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@c1 "hostname; sleep 5"
+# worker 2 started working for n1:22
+# worker 1 started working for c2:22
+# [n1:22] command =  hostname; sleep 5
+# [c2:22] command =  hostname; sleep 5
+# [n1] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [c2] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [n1] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@n1 "hostname; sleep 5"
+# [c2] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@c2 "hostname; sleep 5"
+# [c2] answer yes for continue connecting
+# [c1] answer yes for continue connecting
+# [n1] answer yes for continue connecting
+# [c2] Requesting password
+# [c1] Requesting password
+# [n1] Requesting password
+# [c2] EOF detected
+# [c1] EOF detected
+# worker 1 exited.
+# HOST : [c2]
+# [c2:22] command = hostname; sleep 5
+c2
+
+# worker 0 exited.
+# HOST : [c1]
+# [c1:22] command = hostname; sleep 5
+c1.leonawang.com
+
+# [n1] EOF detected
+# worker 2 exited.
+# HOST : [n1]
+# [n1:22] command = hostname; sleep 5
+n1
+
+
+real	0m6.159s
+user	0m0.284s
+sys	0m0.148s
+openvol@mtp:~/pansi/examples$ 
+openvol@mtp:~/pansi/examples$ 
+openvol@mtp:~/pansi/examples$ time pansi -W1 -Xv -u root -p $mypwd -r c1,c2,n1 -c "hostname; sleep 5"
+# using 1 worker thread(s).
+# worker 0 started working for c1:22
+# [c1:22] command =  hostname; sleep 5
+# [c1] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [c1] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@c1 "hostname; sleep 5"
+# [c1] answer yes for continue connecting
+# [c1] Requesting password
+# [c1] EOF detected
+# HOST : [c1]
+# [c1:22] command = hostname; sleep 5
+c1.leonawang.com
+
+# worker 0 started working for c2:22
+# [c2:22] command =  hostname; sleep 5
+# [c2] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [c2] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@c2 "hostname; sleep 5"
+# [c2] answer yes for continue connecting
+# [c2] Requesting password
+# [c2] EOF detected
+# HOST : [c2]
+# [c2:22] command = hostname; sleep 5
+c2
+
+# worker 0 started working for n1:22
+# [n1:22] command =  hostname; sleep 5
+# [n1] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [n1] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@n1 "hostname; sleep 5"
+# [n1] answer yes for continue connecting
+# [n1] Requesting password
+# [n1] EOF detected
+# worker 0 exited.
+# HOST : [n1]
+# [n1:22] command = hostname; sleep 5
+n1
+
+
+real	0m17.613s
+user	0m0.319s
+sys	0m0.110s
+openvol@mtp:~/pansi/examples$

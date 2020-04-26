@@ -1,0 +1,198 @@
+# pansi will ship the script to target server and run it.
+# if there're depencies, eg. below call of script t2
+# we can ship the whole dir to the target side.
+# -T will add random postfix to the target file/dir
+# -R to remove shipped script 
+# -A will cleanup the cache directory
+
+openvol@mtp:~/pansi/examples/test$ cat t1
+echo this is t1 
+sleep 1
+echo t1 stopped
+openvol@mtp:~/pansi/examples/test$ cat t2
+echo this is t2
+./t1
+sleep 1
+echo t2 stopped
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ pansi -u root -p $mypwd -r c1,c2,n1 -f t1
+# HOST : [c2]
+this is t1
+t1 stopped
+
+# HOST : [c1]
+this is t1
+t1 stopped
+
+# HOST : [n1]
+this is t1
+t1 stopped
+
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ cat t1
+echo this is t1 
+sleep 1
+echo t1 stopped
+openvol@mtp:~/pansi/examples/test$ cat t2
+echo this is t2
+./t1
+sleep 1
+echo t2 stopped
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ time pansi -u root -p $mypwd -r c1,c2,n1 -f t1
+# HOST : [c1]
+this is t1
+t1 stopped
+
+# HOST : [c2]
+this is t1
+t1 stopped
+
+# HOST : [n1]
+this is t1
+t1 stopped
+
+
+real	0m3.823s
+user	0m0.511s
+sys	0m0.202s
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ time pansi -W1 -u root -p $mypwd -r c1,c2,n1 -f t1
+# HOST : [c1]
+this is t1
+t1 stopped
+
+# HOST : [c2]
+this is t1
+t1 stopped
+
+# HOST : [n1]
+this is t1
+t1 stopped
+
+
+real	0m10.038s
+user	0m0.495s
+sys	0m0.214s
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ time pansi -W1 -u root -p $mypwd -r c1,c2,n1 -f t2
+# HOST : [c1]
+this is t2
+/root/.cache/pansi/t2: line 2: ./t1: No such file or directory
+t2 stopped
+
+# HOST : [c2]
+this is t2
+/root/.cache/pansi/t2: line 2: ./t1: No such file or directory
+t2 stopped
+
+# HOST : [n1]
+this is t2
+/root/.cache/pansi/t2: line 2: ./t1: No such file or directory
+t2 stopped
+
+
+real	0m10.072s
+user	0m0.509s
+sys	0m0.222s
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ pansi -u root -p $mypwd -r n1,c1,c2 -f ~/pansi/examples/test -C "{{THEONE}}/t2"
+# HOST : [c2]
+this is t2
+this is t1
+t1 stopped
+t2 stopped
+
+# HOST : [c1]
+this is t2
+this is t1
+t1 stopped
+t2 stopped
+
+# HOST : [n1]
+this is t2
+this is t1
+t1 stopped
+t2 stopped
+
+openvol@mtp:~/pansi/examples/test$ 
+openvol@mtp:~/pansi/examples/test$ pansi -Xv -u root -p $mypwd -r n1 -f ~/pansi/examples/test -C "{{THEONE}}/t2"
+# using 1 worker thread(s).
+# worker 0 started working for n1:22
+# [n1:22] command =  mkdir -p ~root/.cache/pansi
+# [n1] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [n1] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@n1 "mkdir -p ~root/.cache/pansi"
+# [n1] answer yes for continue connecting
+# [n1] Requesting password
+# [n1] EOF detected
+# [n1:22] command =  mkdir -p ~root/.cache/pansi/test
+# [n1] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [n1] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@n1 "mkdir -p ~root/.cache/pansi/test"
+# [n1] answer yes for continue connecting
+# [n1] Requesting password
+# [n1] EOF detected
+# [scp] scp -q -P 22 -o ConnectTimeout=10  -r /data/openvol/pansi/examples/test root@n1:~root/.cache/pansi/test
+# [scp] answer yes
+# [scp] paste password
+# [n1:22] cmd = ~root/.cache/pansi/test/test/t2
+# [n1:22] command =  cd ~root/.cache/pansi/test/test;chmod -R 0755 ~root/.cache/pansi/test;  ~root/.cache/pansi/test/test/t2 2>&1 | tee ~root/.cache/pansi/test.log
+# [n1] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [n1] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@n1 "cd ~root/.cache/pansi/test/test;chmod -R 0755 ~root/.cache/pansi/test;  ~root/.cache/pansi/test/test/t2 2>&1 | tee ~root/.cache/pansi/test.log"
+# [n1] answer yes for continue connecting
+# [n1] Requesting password
+# [n1] EOF detected
+# worker 0 exited.
+# HOST : [n1]
+# [n1:22] script  = /data/openvol/pansi/examples/test
+this is t2
+this is t1
+t1 stopped
+t2 stopped
+
+openvol@mtp:~/pansi/examples/test$ 
+
+openvol@mtp:~/pansi/examples$ pansi -Xv -u root -p $mypwd -r n1 -f ~/pansi/examples/test -C "{{THEONE}}/t2" -t
+Usage: pansi [options]
+
+pansi: error: -t option requires 1 argument
+openvol@mtp:~/pansi/examples$ pansi -Xv -u root -p $mypwd -r n1 -f ~/pansi/examples/test -C "{{THEONE}}/t2" -T
+# using 1 worker thread(s).
+# worker 0 started working for n1:22
+# [n1:22] command =  mkdir -p ~root/.cache/pansi
+# [n1] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [n1] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@n1 "mkdir -p ~root/.cache/pansi"
+# [n1] answer yes for continue connecting
+# [n1] Requesting password
+# [n1] EOF detected
+# [n1:22] command =  mkdir -p ~root/.cache/pansi/test_20200425.113304_kasr5nGuSRC0cFzjofVOmZ7s3OsdHE
+# [n1] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [n1] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@n1 "mkdir -p ~root/.cache/pansi/test_20200425.113304_kasr5nGuSRC0cFzjofVOmZ7s3OsdHE"
+# [n1] answer yes for continue connecting
+# [n1] Requesting password
+# [n1] EOF detected
+# [scp] scp -q -P 22 -o ConnectTimeout=10  -r /data/openvol/pansi/examples/test root@n1:~root/.cache/pansi/test_20200425.113304_kasr5nGuSRC0cFzjofVOmZ7s3OsdHE
+# [scp] answer yes
+# [scp] paste password
+# [n1:22] cmd = ~root/.cache/pansi/test_20200425.113304_kasr5nGuSRC0cFzjofVOmZ7s3OsdHE/test/t2
+# [n1:22] command =  cd ~root/.cache/pansi/test_20200425.113304_kasr5nGuSRC0cFzjofVOmZ7s3OsdHE/test;chmod -R 0755 ~root/.cache/pansi/test_20200425.113304_kasr5nGuSRC0cFzjofVOmZ7s3OsdHE;  ~root/.cache/pansi/test_20200425.113304_kasr5nGuSRC0cFzjofVOmZ7s3OsdHE/test/t2 2>&1 | tee ~root/.cache/pansi/test_20200425.113304_kasr5nGuSRC0cFzjofVOmZ7s3OsdHE.log
+# [n1] sshbase = ssh -o ConnectTimeout=10 -n   -t  -p 22
+# [n1] ssh -o ConnectTimeout=10 -n   -t  -p 22 root@n1 "cd ~root/.cache/pansi/test_20200425.113304_kasr5nGuSRC0cFzjofVOmZ7s3OsdHE/test;chmod -R 0755 ~root/.cache/pansi/test_20200425.113304_kasr5nGuSRC0cFzjofVOmZ7s3OsdHE;  ~root/.cache/pansi/test_20200425.113304_kasr5nGuSRC0cFzjofVOmZ7s3OsdHE/test/t2 2>&1 | tee ~root/.cache/pansi/test_20200425.113304_kasr5nGuSRC0cFzjofVOmZ7s3OsdHE.log"
+# [n1] answer yes for continue connecting
+# [n1] Requesting password
+# [n1] EOF detected
+# worker 0 exited.
+# HOST : [n1]
+# [n1:22] script  = /data/openvol/pansi/examples/test
+this is t2
+this is t1
+t1 stopped
+t2 stopped
+
+

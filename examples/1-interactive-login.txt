@@ -1,0 +1,152 @@
+# -p for the password to login
+# if use public key, use -i to specify pem file
+# even multi-sessions are created in parallel, interactive process cannot.
+# so, this is more of show how to use pansi to do remote login
+# it will take care of most of the interactive process such as answering yes \
+# typing password, etc.   
+# for those servers haven been rebuilt, the fingerprint changed, by default  \
+# pansi reports the issue and asking for a remvoal of known_hosts items.  you \
+# can use -k to allow pansi to remove them automatically.
+# debug : -X is for debug mode. -v will print current command/script to run.
+
+
+openvol@mtp:~/pansi/examples$ pansi -u root -p $mypwd -r c1,c2,n1
+ 
+[root@c1 ~]# 
+[root@c1 ~]# 
+[root@c1 ~]# 
+[root@c1 ~]# 
+[root@c1 ~]# 
+[root@c1 ~]# exit
+logout
+Connection to c1 closed.
+# HOST : [c1]
+
+ 
+root@c2:~# 
+root@c2:~# 
+root@c2:~# 
+root@c2:~# 
+root@c2:~# 
+root@c2:~# exit
+logout
+Connection to c2 closed.
+# HOST : [c2]
+
+ 
+[root@n1 ~]# 
+[root@n1 ~]# 
+[root@n1 ~]# 
+[root@n1 ~]# 
+[root@n1 ~]# 
+[root@n1 ~]# exit
+logout
+Connection to n1 closed.
+# HOST : [n1]
+
+openvol@mtp:~/pansi/examples$ 
+openvol@mtp:~/pansi/examples$ 
+openvol@mtp:~/pansi/examples$ 
+openvol@mtp:~/pansi/examples$ pansi -s -u root -p $mypwd -r c1,c2,n1
+ 
+[root@c1 ~]# 
+[root@c1 ~]# 
+[root@c1 ~]# stty cols 158
+[root@c1 ~]# stty rows 41
+[root@c1 ~]# 
+[root@c1 ~]# 
+[root@c1 ~]# 
+[root@c1 ~]# exit
+logout
+Connection to c1 closed.
+# HOST : [c1]
+
+ 
+root@c2:~# 
+root@c2:~# 
+root@c2:~# stty cols 158
+root@c2:~# stty rows 41
+root@c2:~# 
+root@c2:~# 
+root@c2:~# 
+root@c2:~# exit
+logout
+Connection to c2 closed.
+# HOST : [c2]
+
+ 
+[root@n1 ~]# 
+[root@n1 ~]# 
+[root@n1 ~]# stty cols 158
+[root@n1 ~]# stty rows 41
+[root@n1 ~]# 
+[root@n1 ~]# 
+[root@n1 ~]# 
+[root@n1 ~]# exit
+logout
+Connection to n1 closed.
+# HOST : [n1]
+
+openvol@mtp:~/pansi/examples$ pansi -Xv -s -u root -p $mypwd -r c1,c2,n1
+# using 1 worker thread(s).
+# worker 0 started working for c1:22
+# [c1:22] command =  None
+# [c1] sshbase = ssh -o ConnectTimeout=10   -t  -p 22
+# [c1] ssh -o ConnectTimeout=10   -t  -p 22 root@c1
+# [c1] answer yes for continue connecting
+# [c1] Requesting password
+# [c1] $/#
+ 
+[root@c1 ~]# 
+[root@c1 ~]# 
+[root@c1 ~]# stty cols 158
+[root@c1 ~]# stty rows 41
+[root@c1 ~]# 
+[root@c1 ~]# 
+[root@c1 ~]# 
+[root@c1 ~]# exit
+logout
+Connection to c1 closed.
+# HOST : [c1]
+
+# worker 0 started working for c2:22
+# [c2:22] command =  None
+# [c2] sshbase = ssh -o ConnectTimeout=10   -t  -p 22
+# [c2] ssh -o ConnectTimeout=10   -t  -p 22 root@c2
+# [c2] answer yes for continue connecting
+# [c2] Requesting password
+# [c2] $/#
+ 
+root@c2:~# 
+root@c2:~# 
+root@c2:~# stty cols 158
+root@c2:~# stty rows 41
+root@c2:~# 
+root@c2:~# 
+root@c2:~# 
+root@c2:~# exit
+logout
+Connection to c2 closed.
+# HOST : [c2]
+
+# worker 0 started working for n1:22
+# [n1:22] command =  None
+# [n1] sshbase = ssh -o ConnectTimeout=10   -t  -p 22
+# [n1] ssh -o ConnectTimeout=10   -t  -p 22 root@n1
+# [n1] answer yes for continue connecting
+# [n1] Requesting password
+# [n1] $/#
+ 
+[root@n1 ~]# 
+[root@n1 ~]# 
+[root@n1 ~]# stty cols 158
+[root@n1 ~]# stty rows 41
+[root@n1 ~]# 
+[root@n1 ~]# 
+[root@n1 ~]# 
+[root@n1 ~]# exit
+logout
+Connection to n1 closed.
+# worker 0 exited.
+# HOST : [n1]
+
