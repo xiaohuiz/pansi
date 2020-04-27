@@ -1,0 +1,36 @@
+Usage: pansi [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -r REMOTE, --remote=REMOTE
+                        remote servers. format of host1,host2,host3. Accepts
+                        host:port or user@host:port as well.
+  -c COMMAND, --command=COMMAND
+                        command to run remotely
+  -f SCRIPT, --script=SCRIPT
+                        script to run remotely
+  -u USER, --user=USER  user
+  -p PASSWORD, --password=PASSWORD
+                        password
+  -W WORKER, --worker=WORKER
+                        max number of workers
+  -C CALL, --call=CALL  way to call script, work with -f. eg. "python3
+                        {{THEONE}}"
+  -i PKEY, --pkey=PKEY  private key file for ssh
+  -w WORKDIR, --workdir=WORKDIR
+                        cache dir for script on remote server
+  -t TIMEOUT, --timeout=TIMEOUT
+                        default timeout. better > 5
+  -O OPTION, --option=OPTION
+                        extra option for ssh command
+  -I INIT, --init=INIT  command to run after ssh connection established.
+  -X, --debug           debug mode
+  -R, --remove          remove script and log after run
+  -s, --setterminal     set terminal size same to parent
+  -A, --removeall       with -R, remove all in remote cache
+  -k, --rm_conflict_key
+                        remove known_hosts item without confirmation. this is
+                        useful when a large number of target server being
+                        rebuilt frequently.
+  -v, --verbose         show more info eg. command/script name
+  -T, --tmpfile         use random temp name to avoid conflict
