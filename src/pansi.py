@@ -150,7 +150,7 @@ def main():
         printable = set(string.printable)
         old_r=-1
         good = True
-        resend = False
+        resent = False
         while True:
             r = child.expect([
                 'want to continue connecting', 'assword:', 'ermission denied',
@@ -193,17 +193,34 @@ def main():
                 if options.debug:
                     print("# [{}] key validation failed. target server may have been rebuilt.".format(rserver))
                     print("# [{}] pls check and remove needed from known_hosts.".format(rserver))
+                else :
+                    output += ("# [{}] key validation failed. target server may have been rebuilt.\n".format(rserver))
+                    output += ("# [{}] pls check and remove needed from known_hosts.\n".format(rserver))
                 if options.rm_conflict_key :
+                    if options.debug:
+                        print("# [{}] fixing known_hosts".format(rserver))
+                    else :
+                        output += ("# [{}] fixing known_hosts".format(rserver))
                     if len(cmd) > 0 :
                         for c in cmd :
                             os.system(c)
                     else :
-                            os.system("ssh-keygen -f ~/.ssh/known_hosts -R {}".format(rserver))
-                if command :
-                    child.sendline(sshbase + " \"" + command + "\"")
+                            os.system("ssh-keygen -f ~/.ssh/known_hosts -R {} > /dev/null 2>&1 ".format(rserver))
                 else :
-                    child.sendline(sshbase)
-                resend = True
+                    break
+                if options.debug :
+                    print("# resending request ...")
+                child.close()
+                if command:
+                    if options.debug:
+                        print("# [{}] {}".format(rserver,
+                                                 sshbase + " \"" + command + "\""))
+                    child = pexpect.spawn(sshbase + " \"" + command + "\"", timeout=options.timeout)
+                else:
+                    if options.debug:
+                        print("# [{}] {}".format(rserver, sshbase))
+                    child = pexpect.spawn(sshbase, timeout=options.timeout)
+                resent = True
             if r == 5:
                 output += ("# [{}] TIMEOUT during [{}]\n".format(
                     rserver, command))
@@ -213,9 +230,8 @@ def main():
             if r == 6 :
                 if options.debug:
                     print("# [{}] EOF detected".format(rserver))
-                if old_r == 4 and resend :
-                    resend = False
-                    continue
+                if old_r == 4 and resent :
+                    resent = False
                 content = child.before.decode()
                 if re.search(r'\S+', content):
                     lines = content.splitlines()
