@@ -4,6 +4,8 @@ Poor man's ansible, a command line SSH helper tool.
 It's just a screwdriver, not a set of tools you have to learn about. 
 
 what it can do :
+
+0. expect is used to reduce interactive requirement.
 1. run command remotely
 2. ship and run script remotely
 3. run against multiple servers in parallel

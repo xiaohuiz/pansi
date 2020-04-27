@@ -17,7 +17,8 @@ from random import randrange
 
 def main():
     parser = OptionParser()
-    parser.add_option('-r', '--remote', dest='remote', help='remote servers')
+    parser.add_option('-r', '--remote', 
+                      dest='remote', help='remote servers. format of host1,host2,host3. Accepts host:port or user@host:port as well.')
     parser.add_option('-c',
                       '--command',
                       dest='command',
