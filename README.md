@@ -16,3 +16,6 @@ For people who use SSH a lot.
 In [bin](https://github.com/laowangv5/pansi/tree/master/bin) you can download the binary version which is wrapped by PyInstaller. With this you can save some time without having to setup python environment.  I build them on a rather old server so I suppose it would run well on most Linux servers.
 
 In [examples](https://github.com/laowangv5/pansi/tree/master/examples) there're some simple examples.  Basically pansi follows the way how you use ssh --  simplify the interactive steps with expect(pexpect) and allow you run in specified parallel level. 
+
+[lexpect](https://github.com/laowangv5/pansi/blob/master/src/lexpect.py) is a side product. it can be used when extra rules needed. It can provide a quicker solution than using pure expect.  Normally we can figure out how to "expect" an interactive target in a few attempts.
+
