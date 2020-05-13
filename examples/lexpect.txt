@@ -1,0 +1,220 @@
+[root@n1 ~]# lexpect -h
+Usage: lexpect [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -c COMMAND, --command=COMMAND
+                        command to spawn
+  -r RULES, --rule=RULES
+                        rules to follow
+  -C CONSTANTS, --constant=CONSTANTS
+                        define constant to use
+  -T WHENTIMEOUT, --whentimeout=WHENTIMEOUT
+                        action when timeout
+  -E WHENEOF, --wheneof=WHENEOF
+                        action when eof
+  -P WHENPROMPT, --whenprompt=WHENPROMPT
+                        action when meet with $ or #
+  -t TIMEOUT, --timeout=TIMEOUT
+                        timeout
+  -X, --debug           debug mode
+
+
+example : change ssh keys, ssh to c1 who has root key changed from time to time
+
+[root@n1 test]# cat sshchg
+set -x   
+ssh-keygen -q -N "" -t dsa -f /etc/ssh/ssh_host_dsa_key
+ssh-keygen -q -N "" -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key
+ssh-keygen -q -N "" -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key
+set +x
+
+[root@n1 test]# ./sshchg
+++ ssh-keygen -q -N '' -t dsa -f /etc/ssh/ssh_host_dsa_key
+/etc/ssh/ssh_host_dsa_key already exists.
+Overwrite (y/n)? y
+++ ssh-keygen -q -N '' -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key
+/etc/ssh/ssh_host_rsa_key already exists.
+Overwrite (y/n)? y
+++ ssh-keygen -q -N '' -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key
+/etc/ssh/ssh_host_ecdsa_key already exists.
+Overwrite (y/n)? y
+++ set +x
+
+[root@n1 test]# lexpect -c "bash /root/tmp/sshchg"  -r "Overwrite->y"  
+ (y/n)? y
++ set +x
+
+# -X for debug info
+
+[root@n1 test]# lexpect -c "bash /root/tmp/sshchg"  -r "Overwrite->y"  -X
+# patterns = [<class 'pexpect.exceptions.TIMEOUT'>, <class 'pexpect.exceptions.EOF'>, '[\\$#]', 'Overwrite']
+# response = [None, None, '%BREAK', 'y']
+# Matched : Overwrite (r=3)
++ ssh-keygen -q -N '' -t dsa -f /etc/ssh/ssh_host_dsa_key
+/etc/ssh/ssh_host_dsa_key already exists.
+Overwrite
+
+# actlst = ['y']
+# sendline : y
+# Matched : Overwrite (r=3)
+ (y/n)? y
++ ssh-keygen -q -N '' -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key
+/etc/ssh/ssh_host_rsa_key already exists.
+Overwrite
+
+# actlst = ['y']
+# sendline : y
+# Matched : Overwrite (r=3)
+ (y/n)? y
++ ssh-keygen -q -N '' -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key
+/etc/ssh/ssh_host_ecdsa_key already exists.
+Overwrite
+
+# actlst = ['y']
+# sendline : y
+# Matched : <class 'pexpect.exceptions.EOF'> (r=1)
+ (y/n)? y
++ set +x
+
+
+#   multiple rules
+#   in a rule allow multiple actions
+#   %RESPAWN means restart the expect process, this is useful when original process ended with EOF
+#   say, the logic here is, act and rerun.
+#   %CMD= specify external command to run 
+[root@n1 examples]# lexpect -c "ssh c1.leonawang.com date" -r "password:->XXXXXXXX" -r "continue connecting->yes" -r "Host key verification failed->%CMD=rm -f /root/.ssh/known_hosts;%RESPAWN" 
+ 
+Wed May 13 10:17:43 EDT 2020
+
+#  with debug info
+[root@n1 examples]# lexpect -c "ssh c1.leonawang.com date" -r "password:->XXXXXXXX" -r "continue connecting->yes" -r "Host key verification failed->%CMD=rm -f /root/.ssh/known_hosts;%RESPAWN" -X
+# patterns = [<class 'pexpect.exceptions.TIMEOUT'>, <class 'pexpect.exceptions.EOF'>, '[\\$#]', 'password:', 'continue connecting', 'Host key verification failed']
+# response = [None, None, '%BREAK', 'XXXXXXXX', 'yes', '%CMD=rm -f /root/.ssh/known_hosts;%RESPAWN']
+# Matched : Host key verification failed (r=5)
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+
+It is also possible that a host key has just been changed.
+
+The fingerprint for the RSA key sent by the remote host is
+SHA256:fnLxi4ogJfCkgwz61ICWu/RNMpXj3XjsBJyW/rqFylc.
+
+Please contact your system administrator.
+
+Add correct host key in /root/.ssh/known_hosts to get rid of this message.
+
+Offending RSA key in /root/.ssh/known_hosts:1
+
+RSA host key for c1.leonawang.com has changed and you have requested strict checking.
+
+Host key verification failed
+
+# actlst = ['%CMD=rm -f /root/.ssh/known_hosts', '%RESPAWN']
+# runcmd : rm -f /root/.ssh/known_hosts
+# sendline : %CMD=rm -f /root/.ssh/known_hosts;%RESPAWN
+# respawning
+# Matched : continue connecting (r=4)
+The authenticity of host 'c1.leonawang.com (198.23.255.83)' can't be established.
+RSA key fingerprint is SHA256:fnLxi4ogJfCkgwz61ICWu/RNMpXj3XjsBJyW/rqFylc.
+RSA key fingerprint is MD5:13:7c:fb:4d:d8:d6:3e:bd:72:60:b0:60:67:12:74:5c.
+Are you sure you want to continue connecting
+
+# actlst = ['yes']
+# sendline : yes
+# Matched : password: (r=3)
+ (yes/no)? yes
+Warning: Permanently added 'c1.leonawang.com,198.23.255.83' (RSA) to the list of known hosts.
+
+root@c1.leonawang.com's password:
+
+# actlst = ['XXXXXXXX']
+# sendline : XXXXXXXX
+# Matched : <class 'pexpect.exceptions.EOF'> (r=1)
+ 
+Wed May 13 10:17:56 EDT 2020
+
+[root@n1 examples]# 
+
+
+
+# -C define constant to be used.  PASSWORD or INPUT
+[root@n1 examples]# lexpect -c "ssh c1.leonawang.com date" -C "mypwd->PASSWORD" -r "password:->{{mypwd}}" -r "continue connecting->yes" -r "Host key verification failed->%CMD=rm -f /root/.ssh/known_hosts;%RESPAWN" -X 
+% mypwd : 
+# consts = {'mypwd': 'XXXXXXXX'}
+# patterns = [<class 'pexpect.exceptions.TIMEOUT'>, <class 'pexpect.exceptions.EOF'>, '[\\$#]', 'password:', 'continue connecting', 'Host key verification failed']
+# response = [None, None, '%BREAK', 'XXXXXXXX', 'yes', '%CMD=rm -f /root/.ssh/known_hosts;%RESPAWN']
+# Matched : password: (r=3)
+root@c1.leonawang.com's password:
+
+# actlst = ['XXXXXXXX']
+# sendline : XXXXXXXX 
+# Matched : <class 'pexpect.exceptions.EOF'> (r=1)
+ 
+Wed May 13 10:19:17 EDT 2020
+
+
+# when c1 has root key changed
+
+[root@n1 examples]# lexpect -c "ssh c1.leonawang.com date" -C "mypwd->PASSWORD" -r "password:->{{mypwd}}" -r "continue connecting->yes" -r "Host key verification failed->%CMD=rm -f /root/.ssh/known_hosts;%RESPAWN" -X
+% mypwd : 
+# consts = {'mypwd': 'XXXXXXXX'}
+# patterns = [<class 'pexpect.exceptions.TIMEOUT'>, <class 'pexpect.exceptions.EOF'>, '[\\$#]', 'password:', 'continue connecting', 'Host key verification failed']
+# response = [None, None, '%BREAK', 'XXXXXXXX', 'yes', '%CMD=rm -f /root/.ssh/known_hosts;%RESPAWN']
+# Matched : Host key verification failed (r=5)
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+
+It is also possible that a host key has just been changed.
+
+The fingerprint for the RSA key sent by the remote host is
+SHA256:SVuX9dGMqcbZc23QyR/5gvDBFrbD5KKZt05r0JpQsx4.
+
+Please contact your system administrator.
+
+Add correct host key in /root/.ssh/known_hosts to get rid of this message.
+
+Offending RSA key in /root/.ssh/known_hosts:1
+
+RSA host key for c1.leonawang.com has changed and you have requested strict checking.
+
+Host key verification failed
+
+# actlst = ['%CMD=rm -f /root/.ssh/known_hosts', '%RESPAWN']
+# runcmd : rm -f /root/.ssh/known_hosts
+# sendline : %CMD=rm -f /root/.ssh/known_hosts;%RESPAWN
+# respawning
+# Matched : continue connecting (r=4)
+The authenticity of host 'c1.leonawang.com (198.23.255.83)' can't be established.
+RSA key fingerprint is SHA256:SVuX9dGMqcbZc23QyR/5gvDBFrbD5KKZt05r0JpQsx4.
+RSA key fingerprint is MD5:d6:0f:40:25:2b:95:41:f0:96:5d:db:bc:1f:8c:18:20.
+Are you sure you want to continue connecting
+
+# actlst = ['yes']
+# sendline : yes
+# Matched : password: (r=3)
+ (yes/no)? yes
+Warning: Permanently added 'c1.leonawang.com,198.23.255.83' (RSA) to the list of known hosts.
+
+root@c1.leonawang.com's password:
+
+# actlst = ['XXXXXXXX']
+# sendline : XXXXXXXX
+# Matched : <class 'pexpect.exceptions.EOF'> (r=1)
+ 
+Wed May 13 10:19:43 EDT 2020
+
